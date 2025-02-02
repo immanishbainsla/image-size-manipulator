@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Resizer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        canvas {
+            margin-top: 20px;
+            border: 1px solid #ddd;
+            max-width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <h1>Image Resizer</h1>
+    <input type="file" id="upload" accept="image/*">
+    <br><br>
+    <label for="size">Resize (% of original):</label>
+    <input type="number" id="size" value="100" min="10" max="500">%
+    <br><br>
+    <button onclick="resizeImage()">Resize</button>
+    <br>
+    <canvas id="canvas"></canvas>
+    <br>
+    <a id="download" style="display:none" download="resized-image.png">Download Image</a>
+
+    <script>
+        let originalImage = new Image();
+        let canvas = document.getElementById('canvas');
+        let ctx = canvas.getContext('2d');
+
+        document.getElementById('upload').addEventListener('change', function(event) {
+            let file = event.target.files[0];
+            if (file) {
+                let reader = new FileReader();
+                reader.onload = function(e) {
+                    originalImage.src = e.target.result;
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        originalImage.onload = function() {
+            canvas.width = originalImage.width;
+            canvas.height = originalImage.height;
+            ctx.drawImage(originalImage, 0, 0);
+        }
+
+        function resizeImage() {
+            let scale = document.getElementById('size').value / 100;
+            let newWidth = originalImage.width * scale;
+            let newHeight = originalImage.height * scale;
+            
+            canvas.width = newWidth;
+            canvas.height = newHeight;
+            ctx.drawImage(originalImage, 0, 0, newWidth, newHeight);
+            
+            let downloadLink = document.getElementById('download');
+            downloadLink.href = canvas.toDataURL("image/png");
+            downloadLink.style.display = 'inline';
+            downloadLink.innerText = 'Download Resized Image';
+            
+            updateQueryParams(scale * 100);
+        }
+
+        function updateQueryParams(size) {
+            const url = new URL(window.location);
+            url.searchParams.set('size', size);
+            window.history.replaceState(null, '', url);
+        }
+
+        function applyQueryParams() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const sizeParam = urlParams.get('size');
+            if (sizeParam) {
+                document.getElementById('size').value = sizeParam;
+            }
+        }
+
+        window.onload = applyQueryParams;
+    </script>
+</body>
+</html>
